@@ -1,0 +1,53 @@
+# MySQL for Minikube (replaces Cloud SQL when running locally)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: flash-sale
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: rootpassword
+            - name: MYSQL_DATABASE
+              value: flashsale
+            - name: MYSQL_USER
+              value: flashsale
+            - name: MYSQL_PASSWORD
+              value: flashsale123
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mysql-storage
+              mountPath: /var/lib/mysql
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: mysql-storage
+          emptyDir: {}
+        - name: init-sql
+          configMap:
+            name: mysql-init
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: flash-sale
+spec:
+  selector:
+    app: mysql
+  ports:
+    - port: 3306
+      targetPort: 3306

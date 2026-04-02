@@ -1,0 +1,29 @@
+groups:
+  - name: flash-sale-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: rate(flash_sale_requests_total{status_code=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Error rate above 5% for 2 minutes"
+          description: "5xx error rate is {{ $value }} req/s"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.99, rate(flash_sale_request_duration_seconds_bucket[5m])) > 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "P99 latency above 2 seconds"
+          description: "P99 latency is {{ $value }}s"
+
+      - alert: RateLimiterFiring
+        expr: rate(flash_sale_rate_limited_total[1m]) > 10
+        for: 30s
+        labels:
+          severity: info
+        annotations:
+          summary: "Rate limiter rejecting >10 req/s"
+          description: "Flash sale may be under high load or abuse"

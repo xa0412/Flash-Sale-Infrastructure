@@ -1,0 +1,9 @@
+# Staging-specific HPA: smaller scale (laptop has limited resources)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: flash-sale-api
+  namespace: flash-sale
+spec:
+  minReplicas: 1
+  maxReplicas: 4

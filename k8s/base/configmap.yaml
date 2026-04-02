@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flash-sale-config
+  namespace: flash-sale
+data:
+  # Update these with actual IPs from Terraform outputs when deploying to GCP.
+  # For Minikube, these point to in-cluster MySQL and Redis services.
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  DATABASE_URL: "mysql+pymysql://flashsale:flashsale123@mysql-service:3306/flashsale"
+  RATE_LIMIT_PER_SECOND: "10"
+  ENVIRONMENT: "staging"

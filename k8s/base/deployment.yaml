@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flash-sale-api
+  namespace: flash-sale
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flash-sale-api
+  template:
+    metadata:
+      labels:
+        app: flash-sale-api
+    spec:
+      containers:
+        - name: api
+          image: flash-sale-api:latest
+          imagePullPolicy: IfNotPresent  # Use local image in Minikube
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: flash-sale-config
+          resources:
+            requests:
+              cpu: "100m"      # Guaranteed minimum: 0.1 CPU core
+              memory: "128Mi"  # Guaranteed minimum: 128 MB RAM
+            limits:
+              cpu: "500m"      # Hard ceiling: 0.5 CPU core
+              memory: "256Mi"  # Hard ceiling: 256 MB RAM (OOM-killed if exceeded)
+
+          # Liveness probe: "Is the process stuck or deadlocked?"
+          # If this fails, Kubernetes kills and restarts the pod.
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+
+          # Readiness probe: "Can this pod handle traffic right now?"
+          # If this fails, the pod is removed from the Service (no traffic sent to it).
+          # Use this to catch DB disconnections without killing the pod.
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # Startup probe: "Has the container finished starting up?"
+          # Prevents liveness from killing a slow-starting container.
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: 8000
+            failureThreshold: 30  # 30 * 2s = 60s max startup time
+            periodSeconds: 2

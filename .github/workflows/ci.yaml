@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r app/requirements.txt
+          pip install ruff pytest pytest-cov
+
+      - name: Lint (ruff)
+        run: ruff check app/
+
+      - name: Run unit tests
+        run: |
+          cd app
+          pytest tests/ -v --cov=. --cov-report=term-missing
+
+  docker-build:
+    name: Docker Build & Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t flash-sale-api:${{ github.sha }} ./app
+
+      - name: Scan image for vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "flash-sale-api:${{ github.sha }}"
+          format: "table"
+          exit-code: "0"  # Don't fail on vulnerabilities, just report
+          severity: "HIGH,CRITICAL"
+
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive terraform/
+
+      - name: Validate VPC module
+        run: |
+          cd terraform/modules/vpc
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate GKE module
+        run: |
+          cd terraform/modules/gke
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate Cloud SQL module
+        run: |
+          cd terraform/modules/cloudsql
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate Redis module
+        run: |
+          cd terraform/modules/redis
+          terraform init -backend=false
+          terraform validate

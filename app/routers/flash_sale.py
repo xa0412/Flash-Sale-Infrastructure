@@ -6,7 +6,6 @@ from models import FlashSale, Order
 from schemas import FlashSaleCreate, FlashSaleOut, FlashSaleWithStock, OrderOut, PurchaseRequest, PurchaseResponse
 from services import inventory, rate_limiter
 from metrics import inventory_gauge, orders_total, rate_limited_total
-from datetime import datetime
 
 router = APIRouter(prefix="/api/v1/flash-sale", tags=["flash-sale"])
 

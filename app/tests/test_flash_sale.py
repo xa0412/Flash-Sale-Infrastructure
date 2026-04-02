@@ -2,8 +2,7 @@
 Unit tests for the core flash sale logic (inventory + rate limiting).
 These tests mock Redis and MySQL so no running services are required.
 """
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestRateLimiter:

@@ -40,3 +40,7 @@ load-test/results/
 
 # Internal planning docs
 PLAN.md
+
+# Screenshots
+*.png
+*.jpg
